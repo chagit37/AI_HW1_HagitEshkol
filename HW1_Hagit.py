@@ -4,6 +4,8 @@ HW1 - חיפוש A* ו-IDA* על בעיית הקוביות (Blocks World). זה 
 הרצה:
     python HW1_Hagit.py          - הממשק הגרפי
     python HW1_Hagit.py --demo   - הרצה של כל השיטות על דוגמת המטלה, עם פלט לטרמינל
+    python HW1_Hagit.py --experiment - ניסוי 12 הזוגות, והתוצאות נשמרות בתיקייה outputs:
+                                       experiment_report.html, experiment_report.md, experiment_results.csv
 
 מבנה הקבצים:
     blocks_world.py      - בעיית הקוביות: BlocksWorld, קריאה והדפסה של מצבים
@@ -15,17 +17,21 @@ HW1 - חיפוש A* ו-IDA* על בעיית הקוביות (Blocks World). זה 
     astar.py             - האלגוריתם AStar
     ida_star.py          - האלגוריתם IDAStar
     experiment.py        - ExperimentRunner: ניסוי 12 הזוגות והטבלאות שלו
+    report.py            - דוחות הניסוי: HTML (לדפדפן) ו-Markdown
     gui.py               - הממשק הגרפי BlocksWorldApp
 """
 
+import os
 import signal
 import sys
 
 from astar import AStar
 from blocks_world import EXAMPLE_GOAL, EXAMPLE_INITIAL, BlocksWorld, format_state, parse_state
+from experiment import ExperimentRunner
 from gui import main
 from heuristics import h1, h2, h_zero
 from ida_star import IDAStar
+from report import save_html_report, save_markdown_report
 from search_constants import STATUS_MESSAGES
 
 
@@ -97,8 +103,32 @@ def run_demo():
     print_solution(run_search(AStar(problem), h2), problem)
 
 
+def run_experiment():
+    """מריצה את ניסוי 12 הזוגות ושומרת את התוצאות בתיקייה outputs בשלושה קבצים:
+    experiment_report.html (לפתיחה בדפדפן), experiment_report.md, experiment_results.csv (לאקסל).
+    """
+    sys.stdout.reconfigure(encoding="utf-8")
+    output_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), "outputs")
+    os.makedirs(output_dir, exist_ok=True)
+    seed = 1
+    runner = ExperimentRunner(ExperimentRunner.generate_pairs(seed=seed),
+                              time_limit=30, expansion_limit=500_000, seed=seed)
+    signal.signal(signal.SIGINT, lambda signum, frame: runner.cancel_event.set())
+    print(f"Running {len(runner.pairs)} pairs x {len(runner.METHODS)} methods (Ctrl+C to stop)...")
+    runner.run()
+    paths = {name: os.path.join(output_dir, name)
+             for name in ("experiment_report.html", "experiment_report.md", "experiment_results.csv")}
+    save_html_report(runner, paths["experiment_report.html"])
+    save_markdown_report(runner, paths["experiment_report.md"])
+    runner.save_csv(paths["experiment_results.csv"])
+    for path in paths.values():
+        print("saved:", path)
+
+
 if __name__ == "__main__":
     if "--demo" in sys.argv:
         run_demo()
+    elif "--experiment" in sys.argv:
+        run_experiment()
     else:
         main()

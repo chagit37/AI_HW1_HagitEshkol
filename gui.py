@@ -13,6 +13,7 @@ from blocks_world import (
 )
 from experiment import ALGORITHMS, HEURISTICS, ExperimentRunner
 from ida_star import IDAStar
+from report import save_html_report
 from search_constants import (
     CHILD_ADDED, CHILD_IMPROVED, CHILD_REJECTED, POP_EXPANDED, POP_GOAL, POP_STALE,
     POP_STOPPED, STATUS_MESSAGES,
@@ -392,13 +393,18 @@ class BlocksWorldApp:
         if self.runner is None:
             messagebox.showinfo("ניסוי השוואתי", "אין עדיין תוצאות. הריצו ניסוי קודם.", parent=self.root)
             return
-        path = os.path.join(os.path.dirname(os.path.abspath(__file__)), "experiment_results.csv")
+        folder = os.path.dirname(os.path.abspath(__file__))
+        path = os.path.join(folder, "experiment_results.csv")
+        report_path = os.path.join(folder, "experiment_report.html")
         try:
             self.runner.save_csv(path)
+            save_html_report(self.runner, report_path)
         except OSError as error:
             messagebox.showerror("שמירה נכשלה", str(error), parent=self.root)
             return
-        messagebox.showinfo("ניסוי השוואתי", f"הטבלאות נשמרו בקובץ:\n{path}", parent=self.root)
+        messagebox.showinfo("ניסוי השוואתי",
+                            f"הטבלאות נשמרו בקובץ:\n{path}\n\nדוח מעוצב לפתיחה בדפדפן:\n{report_path}",
+                            parent=self.root)
 
     def stop(self):
         """עצירת ריצה מתמשכת: מדליקים את cancel_event, והחיפוש נעצר בבדיקה הבאה."""
