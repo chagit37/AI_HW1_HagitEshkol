@@ -1,0 +1,22 @@
+initial: ד, א, ב, ג
+goal:    א, ב, ג | ד
+
+h_zero(initial) = 0
+h1(initial) = 1
+h2(initial) = 5
+
+AStar    h_zero  status=success          cost=5   time=0.000s generated=177      expanded=39       max_queue=33      cost_improvements=0
+AStar    h1      status=success          cost=5   time=0.000s generated=37       expanded=6        max_queue=19      cost_improvements=0
+AStar    h2      status=success          cost=5   time=0.000s generated=30       expanded=5        max_queue=17      cost_improvements=0
+IDAStar  h_zero  status=success          cost=5   time=0.001s generated=630      expanded=124      iterations=6
+IDAStar  h1      status=success          cost=5   time=0.000s generated=32       expanded=10       iterations=3
+IDAStar  h2      status=success          cost=5   time=0.000s generated=16       expanded=5        iterations=1
+
+Solution path (AStar, h2):
+Total cost: 5
+step  block from    to      cumulative cost  state after the move
+   1  ג     ב       table   1                ג | ד, א, ב
+   2  ב     א       table   2                ב | ג | ד, א
+   3  א     ד       table   3                א | ב | ג | ד
+   4  ב     table   א       4                א, ב | ג | ד
+   5  ג     table   ב       5                א, ב, ג | ד

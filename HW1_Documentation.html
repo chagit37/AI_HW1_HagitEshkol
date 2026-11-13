@@ -1,0 +1,447 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>תיעוד - מטלה 1: בעיית הקוביות</title>
+<style>
+  :root {
+    --bg: #fbfbf9; --text: #1f2933; --muted: #5b6770; --line: #d9dee3;
+    --card: #ffffff; --accent: #1f5f8b; --code-bg: #eef2f5; --head: #f1f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15191d; --text: #e4e8eb; --muted: #9aa5ae; --line: #343c43;
+      --card: #1c2227; --accent: #7cb7dd; --code-bg: #242c33; --head: #222a30;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif; font-size: 16px; line-height: 1.7;
+  }
+  main { max-width: 900px; margin: 0 auto; padding: 24px 18px 60px; }
+  h1 { font-size: 1.7rem; margin: 0 0 4px; }
+  h2 { font-size: 1.25rem; margin: 40px 0 10px; padding-bottom: 6px;
+       border-bottom: 2px solid var(--line); color: var(--accent); }
+  h3 { font-size: 1.05rem; margin: 22px 0 6px; }
+  p { margin: 8px 0; }
+  .lead { color: var(--muted); margin-bottom: 20px; }
+  nav { background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+        padding: 12px 18px; margin: 18px 0; }
+  nav ol { margin: 4px 0; padding-inline-start: 22px; columns: 2; column-gap: 30px; }
+  a { color: var(--accent); }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px;
+         font-family: Consolas, "Courier New", monospace; font-size: 0.92em;
+         direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+        padding: 12px 14px; overflow-x: auto; text-align: left;
+        font-family: Consolas, "Courier New", monospace; font-size: 0.9em; line-height: 1.5; }
+  .table-wrap { overflow-x: auto; margin: 10px 0; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: right; vertical-align: top; }
+  th { background: var(--head); font-weight: 600; }
+  td.num, th.num { text-align: center; }
+  ul, ol { padding-inline-start: 24px; }
+  li { margin: 4px 0; }
+  .note { background: var(--card); border: 1px solid var(--line);
+          border-inline-start: 4px solid var(--accent); border-radius: 6px;
+          padding: 10px 14px; margin: 14px 0; }
+  @media (max-width: 600px) { nav ol { columns: 1; } body { font-size: 15px; } }
+</style>
+</head>
+<body>
+<main>
+
+<h1>מטלה 1 - חיפוש בבעיית הקוביות</h1>
+<p class="lead">תיעוד של מה שנבנה: מבנה הקבצים, מבני הנתונים, האלגוריתמים, הממשק, הניסוי והבדיקות.</p>
+
+<nav>
+  <strong>תוכן</strong>
+  <ol>
+    <li><a href="#what">מה התוכנה עושה</a></li>
+    <li><a href="#files">הקבצים, ולפי מה חולקו</a></li>
+    <li><a href="#state">ייצוג מצב</a></li>
+    <li><a href="#problem">המחלקה BlocksWorld</a></li>
+    <li><a href="#heuristics">היוריסטיקות</a></li>
+    <li><a href="#base">תשתית החיפוש</a></li>
+    <li><a href="#astar">האלגוריתם A*</a></li>
+    <li><a href="#ida">האלגוריתם IDA*</a></li>
+    <li><a href="#metrics">המדדים</a></li>
+    <li><a href="#trace">יומן החיפוש</a></li>
+    <li><a href="#gui">הממשק הגרפי</a></li>
+    <li><a href="#experiment">הניסוי ההשוואתי</a></li>
+    <li><a href="#tests">הבדיקות שבוצעו</a></li>
+    <li><a href="#limits">החלטות ומגבלות</a></li>
+  </ol>
+</nav>
+
+<h2 id="what">1. מה התוכנה עושה</h2>
+<p>התוכנה פותרת את בעיית הקוביות: נתונים מצב התחלתי ומצב יעד של קוביות מסודרות בערימות על שולחן,
+וצריך למצוא רצף קצר ביותר של העברות שמוביל מהראשון לשני.</p>
+<ul>
+  <li>שני אלגוריתמי חיפוש: <code>A*</code> (חיפוש בגרף) ו-<code>IDA*</code>.</li>
+  <li>שלוש יוריסטיקות: <code>h0</code>, <code>h1</code>, <code>h2</code>. יחד אלה שש שיטות.</li>
+  <li>ממשק גרפי להזנת מצבים, הרצה, צפייה במסלול הפתרון ובתהליך החיפוש.</li>
+  <li>ניסוי השוואתי על 12 זוגות מצבים אקראיים, עם ממוצעים וסטיות תקן.</li>
+</ul>
+<p>הכול כתוב בפייתון, בלי ספריות חיצוניות. ליבת האלגוריתמים ממומשת בקוד עצמו;
+מהספרייה הסטנדרטית נלקחו רק מבני נתונים (<code>heapq</code>) והממשק (<code>tkinter</code>).</p>
+
+<h2 id="files">2. הקבצים, ולפי מה חולקו</h2>
+<p>העיקרון: <strong>לכל קובץ אחריות אחת</strong>, והתלות בין הקבצים הולכת בכיוון אחד בלבד -
+קובץ "גבוה" מכיר קבצים "נמוכים" ממנו, ולא להפך.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>הקובץ</th><th>האחריות שלו</th><th>במה הוא תלוי</th></tr>
+  <tr><td><code>blocks_world.py</code></td><td>הבעיה עצמה: מצבים, חוקי המשחק, קריאה והדפסה של מצבים</td><td>בשום קובץ אחר</td></tr>
+  <tr><td><code>heuristics.py</code></td><td>שלוש פונקציות היוריסטיקה</td><td>בשום קובץ אחר</td></tr>
+  <tr><td><code>search_constants.py</code></td><td>קבועי הסטטוס, ההודעות למשתמש וערכי יומן החיפוש</td><td>בשום קובץ אחר</td></tr>
+  <tr><td><code>node.py</code></td><td>המחלקה <code>Node</code></td><td>בשום קובץ אחר</td></tr>
+  <tr><td><code>search_result.py</code></td><td>המחלקה <code>SearchResult</code></td><td><code>search_constants</code></td></tr>
+  <tr><td><code>search_algorithm.py</code></td><td>מחלקת הבסיס <code>SearchAlgorithm</code>, המשותפת לשני האלגוריתמים</td><td><code>search_constants</code>, <code>search_result</code></td></tr>
+  <tr><td><code>astar.py</code></td><td>האלגוריתם <code>A*</code></td><td><code>search_algorithm</code>, <code>node</code>, <code>search_constants</code></td></tr>
+  <tr><td><code>ida_star.py</code></td><td>האלגוריתם <code>IDA*</code></td><td><code>search_algorithm</code>, <code>search_constants</code></td></tr>
+  <tr><td><code>experiment.py</code></td><td>הניסוי ההשוואתי והטבלאות שלו</td><td>בכל הקבצים שמעליו</td></tr>
+  <tr><td><code>gui.py</code></td><td>הממשק הגרפי</td><td>בכל הקבצים שמעליו</td></tr>
+  <tr><td><code>HW1_Hagit.py</code></td><td>הקובץ שמריצים, והרצה לטרמינל</td><td>בכל השאר</td></tr>
+</table>
+</div>
+<pre dir="ltr">                               search_constants     node
+                                  |         \        |
+                            search_result    \       |
+                                  |           \      |
+blocks_world     heuristics     search_algorithm     |
+     |               |            /          \       |
+     |               |       ida_star         astar -+
+     \               |            \          /
+      +----------- experiment ----+---------+
+                        |
+                       gui
+                        |
+                   HW1_Hagit   (the file you run)</pre>
+<h3>מה מרוויחים מהחלוקה הזו</h3>
+<ul>
+  <li><strong>האלגוריתמים לא מכירים את בעיית הקוביות.</strong> הם משתמשים רק ב-<code>initial_state</code>,
+      <code>is_goal()</code> ו-<code>get_childs()</code>, ולכן יעבדו על כל בעיה שמספקת את שלושתם.</li>
+  <li><strong>האלגוריתמים לא מכירים יוריסטיקה מסוימת.</strong> היוריסטיקה נמסרת כפרמטר ל-<code>search()</code>.</li>
+  <li><strong>הלוגיקה לא מכירה את הממשק.</strong> אפשר להריץ חיפוש או ניסוי שלם בלי לפתוח חלון,
+      וכך גם נבדק הקוד.</li>
+</ul>
+
+<h2 id="state">3. ייצוג מצב</h2>
+<p>מצב הוא <code>tuple</code> של <code>tuple</code>. כל <code>tuple</code> פנימי הוא ערימה אחת,
+מהקובייה התחתונה (שעל השולחן) ועד העליונה.</p>
+<pre dir="ltr">(("א", "ב", "ג"), ("ד",))     # stack א-ב-ג (א at the bottom), and ד alone</pre>
+<h3>ייצוג קנוני</h3>
+<p>מיקום הערימה על השולחן לא משנה, ולכן אותו סידור יכול להיכתב בכמה דרכים. כדי שכל סידור יקבל ייצוג
+אחד בלבד, הערימות ממוינות לפי הקובייה התחתונה שלהן. הסדר בתוך ערימה לא משתנה - הוא חלק מהמצב.
+את זה עושה <code>BlocksWorld.canonicalize()</code>.</p>
+<p>בגלל שמצב הוא <code>tuple</code>, אפשר לשמור אותו ב-<code>set</code>, להשתמש בו כמפתח ב-<code>dict</code>
+ולהשוות בין מצבים בתוך ערימת העדיפויות.</p>
+
+<h2 id="problem">4. המחלקה BlocksWorld</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>מתודה</th><th>תפקיד</th></tr>
+  <tr><td><code>canonicalize()</code></td><td>יצירת הייצוג הקנוני</td></tr>
+  <tr><td><code>get_support()</code></td><td>התמיכה הישירה של כל קובייה: הקובייה שמתחתיה, או השולחן</td></tr>
+  <tr><td><code>is_goal()</code></td><td>בדיקה אם המצב הוא מצב היעד</td></tr>
+  <tr><td><code>move_to_table()</code></td><td>העברת קובייה עליונה לערימה חדשה על השולחן. אסורה אם הקובייה כבר לבדה על השולחן, כי לא נוצר מצב חדש</td></tr>
+  <tr><td><code>move_onto_block()</code></td><td>העברת קובייה עליונה של ערימה אחת אל ראש ערימה אחרת</td></tr>
+  <tr><td><code>get_childs()</code></td><td>כל המצבים שאפשר להגיע אליהם בהעברה חוקית אחת, כל אחד עם העלות שלו</td></tr>
+  <tr><td><code>get_action()</code></td><td>זיהוי הפעולה שבין שני מצבים עוקבים: קובייה, מקור, יעד</td></tr>
+  <tr><td><code>get_solution_steps()</code></td><td>רשימת הפעולות של מסלול, עם עלות מצטברת</td></tr>
+</table>
+</div>
+<p>שתי הפעולות עולות 1. בבנאי נבדק שהמצב ההתחלתי ומצב היעד מכילים בדיוק אותן קוביות, וכל קובייה פעם אחת.</p>
+<div class="note">
+  <strong>למה לא שומרים את הפעולה בכל Node:</strong> בין שני מצבים עוקבים יש תמיד בדיוק קובייה אחת
+  שהתמיכה הישירה שלה השתנתה, וזו הקובייה שהוזזה. לכן אפשר לשחזר את הפעולות מהמסלול עצמו, בסוף,
+  בלי לשמור אותן על כל מצב שנוצר בחיפוש.
+</div>
+
+<h2 id="heuristics">5. היוריסטיקות</h2>
+<p>קובייה נמצאת <strong>במקום שגוי</strong> אם התמיכה הישירה שלה שונה מהתמיכה הישירה שלה ביעד.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>יוריסטיקה</th><th>הגדרה</th></tr>
+  <tr><td><code>h0</code></td><td>תמיד 0</td></tr>
+  <tr><td><code>h1</code></td><td><code>X</code> - מספר הקוביות שנמצאות במקום שגוי</td></tr>
+  <tr><td><code>h2</code></td><td><code>X + 2Y</code>, כאשר <code>Y</code> הוא מספר הקוביות שנמצאות במקום תקין, אבל אי שם מתחתיהן באותה ערימה יש קובייה במקום שגוי</td></tr>
+</table>
+</div>
+<h3>למה הן קבילות</h3>
+<ul>
+  <li><strong>היוריסטיקה h1:</strong> כל קובייה במקום שגוי חייבת לזוז לפחות פעם אחת, וכל פעולה מזיזה קובייה אחת בלבד.</li>
+  <li><strong>היוריסטיקה h2:</strong> קובייה מהקבוצה <code>Y</code> חייבת לזוז פעמיים - פעם כדי לפנות את הקובייה
+      השגויה שמתחתיה, ופעם כדי לחזור למקומה. הספירות של קוביות שונות לא חופפות, כי כל פעולה מזיזה קובייה אחת.</li>
+</ul>
+<h3>למה הן עקביות</h3>
+<p>פעולה אחת משנה רק את הקובייה שהוזזה: היא הייתה בראש ערימה, ולכן שום קובייה אחרת לא משנה תמיכה ושום דבר
+לא משתנה מתחת לקוביות האחרות. התרומה של קובייה אחת יכולה לרדת לכל היותר ב-1 בפעולה אחת
+(קובייה מ-<code>Y</code>, שתורמת 2, עוברת בהכרח למקום שגוי ותורמת 1). לכן
+<code>h(s) ≤ 1 + h(s')</code> לכל מצב ויורש שלו.</p>
+<h3>הקשר בין הערכים</h3>
+<p>בכל מצב מתקיים <code>h0 ≤ h1 ≤ h2 ≤</code> העלות האמיתית.</p>
+<h3>הערכים בדוגמת המטלה</h3>
+<p>מצב התחלתי <code dir="rtl">ד, א, ב, ג</code> ומצב יעד <code dir="rtl">ד | א, ב, ג</code>. העלות האופטימלית היא 5.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>יוריסטיקה</th><th class="num">ערך</th><th>הסבר</th></tr>
+  <tr><td><code>h0</code></td><td class="num">0</td><td>לפי ההגדרה</td></tr>
+  <tr><td><code>h1</code></td><td class="num">1</td><td>רק הקובייה א במקום שגוי: היא על ד, וביעד היא על השולחן</td></tr>
+  <tr><td><code>h2</code></td><td class="num">5</td><td>הקובייה א תורמת 1; הקוביות ב ו-ג במקום תקין מעל קובייה שגויה, וכל אחת תורמת 2</td></tr>
+</table>
+</div>
+<div class="note">הטענות נבדקו גם בפועל על 300 בעיות אקראיות (ראו סעיף 13), אבל בדיקה כזו אינה הוכחה פורמלית.</div>
+
+<h2 id="base">6. תשתית החיפוש</h2>
+<p>ארבעה קבצים קטנים: <code>search_constants.py</code>, <code>node.py</code>, <code>search_result.py</code>
+ו-<code>search_algorithm.py</code>.</p>
+<h3>המחלקה Node</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>שדה</th><th>משמעות</th></tr>
+  <tr><td><code>state</code></td><td>המצב, בייצוג קנוני</td></tr>
+  <tr><td><code>g</code></td><td>עלות ההגעה למצב</td></tr>
+  <tr><td><code>h</code></td><td>הערכת העלות שנותרה עד היעד</td></tr>
+  <tr><td><code>parent</code></td><td>ה-<code>Node</code> הקודם במסלול</td></tr>
+</table>
+</div>
+<h3>המחלקה SearchResult</h3>
+<p>כל ריצה מחזירה אובייקט כזה, גם אם לא נמצא פתרון.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>שדה</th><th>משמעות</th></tr>
+  <tr><td><code>status</code></td><td>תוצאת הריצה: הצלחה, אין פתרון, מגבלת זמן, מגבלת פיתוחים, או עצירה על ידי המשתמש</td></tr>
+  <tr><td><code>path</code></td><td>מסלול הפתרון, אם נמצא</td></tr>
+  <tr><td><code>cost</code></td><td>עלות הפתרון. כשאין פתרון הערך הוא <code>None</code>, כדי לא לבלבל עם פתרון בעלות 0</td></tr>
+  <tr><td><code>elapsed_time</code></td><td>זמן הריצה</td></tr>
+  <tr><td><code>expansions_count</code></td><td>מספר המצבים שפותחו</td></tr>
+  <tr><td><code>generated</code></td><td>מספר המצבים שנוצרו</td></tr>
+  <tr><td><code>max_open_size</code>, <code>improvements</code></td><td>גודל תור מרבי ומספר שיפורי עלות - רק ב-<code>A*</code></td></tr>
+  <tr><td><code>iterations</code></td><td>מספר האיטרציות - רק ב-<code>IDA*</code></td></tr>
+  <tr><td><code>trace</code></td><td>יומן החיפוש לתצוגה</td></tr>
+</table>
+</div>
+<h3>מחלקת הבסיס SearchAlgorithm</h3>
+<p>מחזיקה את הבעיה, היוריסטיקה, המגבלות והמונים. המתודה <code>search()</code> אבסטרקטית, וכל אלגוריתם מממש אותה.</p>
+<p>המתודה <code>check_stop_conditions()</code> בודקת שלושה דברים ומחזירה את סיבת העצירה:</p>
+<ul>
+  <li>בקשת עצירה של המשתמש (<code>cancel_event</code>).</li>
+  <li>מגבלת זמן.</li>
+  <li>מגבלת פיתוחים. היא נבדקת רק רגע לפני פיתוח נוסף, כדי שלא תמנע זיהוי של מצב יעד שכבר נשלף.</li>
+</ul>
+
+<h2 id="astar">7. האלגוריתם A*</h2>
+<h3>מבני הנתונים</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>שם</th><th>סוג</th><th>תוכן</th></tr>
+  <tr><td><code>open_heap</code></td><td>רשימה שמנוהלת עם <code>heapq</code></td><td>רשומות <code>(f, -g, state)</code></td></tr>
+  <tr><td><code>nodes</code></td><td><code>dict</code></td><td>לכל מצב - ה-<code>Node</code> הטוב ביותר שהתגלה</td></tr>
+  <tr><td><code>closed</code></td><td><code>set</code></td><td>המצבים שכבר פותחו</td></tr>
+</table>
+</div>
+<p>הרשומה <code>(f, -g, state)</code> קובעת את סדר השליפה, כי פייתון משווה אותה משמאל לימין:
+קודם <code>f</code> הקטן ביותר; בשוויון - <code>g</code> הגדול ביותר (המינוס נדרש כי זו ערימת מינימום);
+בשוויון נוסף - הייצוג הקנוני של המצב, בסדר מילוני.</p>
+<h3>סדר הפעולות ב-search()</h3>
+<ol>
+  <li><strong>אתחול:</strong> <code>Node</code> התחלתי עם <code>g=0</code>, הכנסה ל-<code>nodes</code> ול-Open. הקבוצה Closed ריקה.</li>
+  <li><strong>תנאי עצירה:</strong> בקשת המשתמש ומגבלת הזמן.</li>
+  <li><strong>שליפה</strong> של הרשומה המינימלית מ-Open.</li>
+  <li><strong>רשומה ישנה:</strong> אם ה-<code>g</code> שברשומה שונה מ-<code>nodes[state].g</code>, מדלגים עליה. היא לא נחשבת פיתוח.</li>
+  <li><strong>בדיקת Closed:</strong> אם המצב כבר פותח, מדלגים.</li>
+  <li><strong>בדיקת יעד:</strong> רק כאן, אחרי השליפה, ולא כשהמצב נוצר. אחרת אפשר לעצור על פתרון לא אופטימלי.</li>
+  <li><strong>פיתוח:</strong> בדיקת מגבלת הפיתוחים, הכנסה ל-Closed, והגדלת המונה.</li>
+  <li><strong>טיפול בכל ילד</strong> - לפי הטבלה שלמטה.</li>
+</ol>
+<div class="table-wrap">
+<table>
+  <tr><th>מצב הילד ב-nodes</th><th>מה עושים</th><th>ביומן</th></tr>
+  <tr><td>לא קיים</td><td>מחשבים <code>h</code>, יוצרים <code>Node</code>, מכניסים ל-Open</td><td>נוסף</td></tr>
+  <tr><td>קיים עם <code>g</code> קטן או שווה לחדש</td><td>מתעלמים</td><td>נדחה</td></tr>
+  <tr><td>קיים עם <code>g</code> גדול מהחדש</td><td>מעדכנים את <code>nodes</code> ואת מצביע האב, מוציאים מ-Closed אם הוא שם, מכניסים רשומה חדשה ל-Open</td><td>שופר</td></tr>
+</table>
+</div>
+<h3>שתי נקודות עדינות</h3>
+<ul>
+  <li><strong>מחיקה עצלה:</strong> כשנמצא מסלול טוב יותר למצב, הרשומה הישנה שלו נשארת ב-Open ולא נמחקת.
+      היא נדחית בשלב 4 כשמגיע תורה.</li>
+  <li><strong>פתיחה מחדש:</strong> ההוצאה מ-Closed בשורה השלישית שומרת על אופטימליות גם עם יוריסטיקה קבילה שאינה עקבית.
+      עם <code>h1</code> ו-<code>h2</code> זה לא קורה, כי שתיהן עקביות.</li>
+</ul>
+<p>כשמגיעים ליעד, <code>reconstruct_path()</code> הולכת אחורה דרך <code>parent</code> עד ההתחלה והופכת את הרשימה.</p>
+
+<h2 id="ida">8. האלגוריתם IDA*</h2>
+<ul>
+  <li><strong>הסף הראשון</strong> הוא <code>h</code> של מצב ההתחלה.</li>
+  <li><strong>בכל איטרציה</strong> מתבצע חיפוש לעומק (רקורסיה). מצב שה-<code>f</code> שלו גדול מהסף נגזם.</li>
+  <li><strong>הסף הבא</strong> הוא ה-<code>f</code> הקטן ביותר שחרג מהסף הנוכחי.</li>
+  <li><strong>מניעת מעגלים:</strong> לא חוזרים למצב שכבר נמצא במסלול הרקורסיבי הנוכחי.
+      אין קבוצת מצבים סגורים גלובלית בין האיטרציות.</li>
+</ul>
+<h3>מבנה הנתונים: המסלול הנוכחי</h3>
+<p>המבנה היחיד שמחזיק מצבים הוא <code>path</code>, מסוג <code>dict</code>. המפתחות שלו הם המצבים שבמסלול הנוכחי, מהשורש ועד המצב שמפותח כרגע,
+והערך של כל מפתח הוא תמיד <code>None</code>. המילון משמש לשני דברים:</p>
+<ul>
+  <li><strong>בדיקת מעגל:</strong> הבדיקה <code>child in path</code> מתבצעת לפי hash, בזמן O(1), כמו ב-<code>set</code>.</li>
+  <li><strong>שמירת הסדר:</strong> מילון בפייתון שומר את סדר ההכנסה. לכן <code>list(path)</code> מחזירה את מסלול הפתרון מההתחלה ליעד.</li>
+</ul>
+<p>בירידה לילד מוסיפים אותו בסוף בעזרת <code>path[child] = None</code>. בחזרה מהרקורסיה מוציאים אותו בעזרת <code>path.popitem()</code>, שמוציאה את המפתח שהוכנס אחרון.
+כך המילון מכיל תמיד רק את המסלול הנוכחי, והזיכרון גדל לפי עומק החיפוש בלבד.
+בגרסה קודמת היו שני מבנים, רשימה לסדר וקבוצה לבדיקה מהירה, והמילון מחליף את שניהם.</p>
+<p>הפונקציה <code>_dfs(path, state, parent, g, threshold)</code> מקבלת את המצב הנוכחי ואת המצב שלפניו כפרמטרים, כי במילון אין גישה לפי מיקום כמו <code>path[-1]</code>.
+המצב הקודם משמש רק ליומן החיפוש שמוצג בממשק.</p>
+<p>האלגוריתם מחזיק בזיכרון רק את המסלול הנוכחי, ולכן אין לו תור עדיפויות. המחיר הוא שהוא מפתח את אותם מצבים שוב ושוב.</p>
+
+<h2 id="metrics">9. המדדים</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>מדד</th><th>איך הוא נספר</th><th>באיזה אלגוריתם</th></tr>
+  <tr><td>זמן ריצה</td><td>מתחילת <code>search()</code> ועד החזרת התוצאה</td><td>שניהם</td></tr>
+  <tr><td>מצבים שנוצרו</td><td>כל ילד ש-<code>get_childs()</code> הפיקה, לפני בדיקת כפילויות</td><td>שניהם</td></tr>
+  <tr><td>מצבים שפותחו</td><td>מצבים שהופקו מהם ילדים</td><td>שניהם</td></tr>
+  <tr><td>גודל תור מרבי</td><td>הגודל הגדול ביותר של Open במהלך הריצה, כולל רשומות ישנות שעוד בתור</td><td>רק <code>A*</code></td></tr>
+  <tr><td>שיפורי עלות מסלול</td><td>כמה פעמים נמצא מסלול זול יותר למצב מוכר</td><td>רק <code>A*</code></td></tr>
+  <tr><td>מספר איטרציות</td><td>כמה ספים נוסו</td><td>רק <code>IDA*</code></td></tr>
+</table>
+</div>
+<h3>התוצאות על דוגמת המטלה</h3>
+<div class="table-wrap">
+<table>
+  <tr><th>שיטה</th><th class="num">עלות</th><th class="num">נוצרו</th><th class="num">פותחו</th><th class="num">תור מרבי</th><th class="num">שיפורי עלות</th><th class="num">איטרציות</th></tr>
+  <tr><td><code>A* h0</code></td><td class="num">5</td><td class="num">177</td><td class="num">39</td><td class="num">33</td><td class="num">0</td><td class="num">-</td></tr>
+  <tr><td><code>A* h1</code></td><td class="num">5</td><td class="num">37</td><td class="num">6</td><td class="num">19</td><td class="num">0</td><td class="num">-</td></tr>
+  <tr><td><code>A* h2</code></td><td class="num">5</td><td class="num">30</td><td class="num">5</td><td class="num">17</td><td class="num">0</td><td class="num">-</td></tr>
+  <tr><td><code>IDA* h0</code></td><td class="num">5</td><td class="num">630</td><td class="num">124</td><td class="num">-</td><td class="num">-</td><td class="num">6</td></tr>
+  <tr><td><code>IDA* h1</code></td><td class="num">5</td><td class="num">32</td><td class="num">10</td><td class="num">-</td><td class="num">-</td><td class="num">3</td></tr>
+  <tr><td><code>IDA* h2</code></td><td class="num">5</td><td class="num">16</td><td class="num">5</td><td class="num">-</td><td class="num">-</td><td class="num">1</td></tr>
+</table>
+</div>
+
+<h2 id="trace">10. יומן החיפוש</h2>
+<p>היומן נשמר ב-<code>SearchResult.trace</code> ומשמש רק לתצוגה. הוא נשמר בנפרד ממבני הנתונים של האלגוריתם,
+ולכן אינו נכלל במדדי הזיכרון.</p>
+<ul>
+  <li><strong>ביומן של A*</strong> יש רשומה לכל שליפה מ-Open: מספר השליפה, המצב, <code>g</code>, <code>h</code>, <code>f</code>,
+      גודל התור ברגע השליפה, המצב הקודם, מה קרה לרשומה (פותחה, יעד, ישנה), ומה קרה לכל אחד מיורשיה.</li>
+  <li><strong>ביומן של IDA*</strong> יש רשומה לכל איטרציה: הסף, מספר הפיתוחים, מספר הגיזומים, הסף הבא,
+      רשימת המצבים שפותחו ודוגמאות לגיזום.</li>
+</ul>
+<p>גודל היומן נקבע בפרמטר <code>trace_limit</code>. הממשק שומר עד 5,000 שליפות (ב-<code>IDA*</code>: עד 5,000 מצבים
+ו-50 דוגמאות גיזום לכל איטרציה). בניסוי ההשוואתי היומן כבוי, כדי שלא ישפיע על מדידת הזמן.</p>
+
+<h2 id="gui">11. הממשק הגרפי (gui.py)</h2>
+<p>הממשק בנוי ב-<code>tkinter</code>. החיפוש רץ בתהליכון נפרד, ולכן המסך נשאר פעיל ואפשר ללחוץ על "עצור" באמצע ריצה.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>לשונית</th><th>מה מוצג בה</th></tr>
+  <tr><td>מסלול הפתרון</td><td>עלות כוללת, טבלת הפעולות (קובייה, מקור, יעד, עלות מצטברת), ציור הערימות וצעידה בין המצבים</td></tr>
+  <tr><td>תהליך החיפוש</td><td>יומן החיפוש, בתצוגה שמתאימה לאלגוריתם שהורץ</td></tr>
+  <tr><td>השוואת ריצות</td><td>שורה לכל ריצה שבוצעה, עם כל המדדים</td></tr>
+  <tr><td>ניסוי השוואתי</td><td>הרצת הניסוי ושתי הטבלאות שלו</td></tr>
+</table>
+</div>
+
+<h2 id="experiment">12. הניסוי ההשוואתי (experiment.py)</h2>
+<p>המחלקה <code>ExperimentRunner</code> אחראית על הניסוי כולו; הממשק רק מפעיל אותה ומציג את הטבלאות שהיא מחזירה.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>מתודה</th><th>תפקיד</th></tr>
+  <tr><td><code>generate_pairs(sizes, seed)</code></td><td>יצירת זוגות מצבים אקראיים. אותו גרעין נותן תמיד את אותם זוגות</td></tr>
+  <tr><td><code>run()</code></td><td>הרצת כל זוג בשש השיטות ואיסוף התוצאות</td></tr>
+  <tr><td><code>performance_by_measure()</code></td><td>טבלה 1</td></tr>
+  <tr><td><code>runs_table()</code></td><td>טבלה 2</td></tr>
+  <tr><td><code>costs_agree()</code></td><td>בדיקה שבכל זוג, כל השיטות שמצאו פתרון מצאו אותה עלות</td></tr>
+  <tr><td><code>save_csv(path)</code></td><td>שמירת הטבלאות ותנאי הניסוי לקובץ</td></tr>
+</table>
+</div>
+<h3>ברירת המחדל</h3>
+<p>12 זוגות: שלושה זוגות מכל אחד מהגדלים 3, 5, 7 ו-9 קוביות, עם גרעין אקראי 1.</p>
+<h3>טבלה 1 - השוואת ביצועי השיטות</h3>
+<p>עמודה לכל שיטה ושורה לכל מדד: זמן ממוצע, סטיית תקן זמן, ממוצע פיתוחים, סטיית תקן פיתוחים, הצלחות, הגעה למגבלת ריצה.</p>
+<h3>טבלה 2 - פירוט כל הריצות</h3>
+<p>שורה לכל ריצה (זוג אחד בשיטה אחת), 72 שורות ב-12 זוגות. העמודות: זוג, מספר קוביות, מצב התחלתי, מצב יעד,
+שיטה, תוצאה, עלות, השוואת עלות, זמן, פיתוחים.</p>
+<p>שש השורות של כל זוג צמודות וצבועות באותו רקע. עמודת "השוואת עלות" מציינת "זהה" כשכל השיטות שפתרו את הזוג
+הגיעו לאותה עלות. ריצה שלא הגיעה לפתרון אינה משתתפת בהשוואה, והתא שלה ריק.</p>
+
+<h3>תוצאות הניסוי</h3>
+<p>תנאי ההרצה: ברירת המחדל - 12 זוגות (שלושה מכל גודל: 3, 5, 7 ו-9 קוביות), גרעין אקראי 1,
+מגבלת זמן של 30 שניות ומגבלה של 500,000 פיתוחים לכל ריצה. סך הכול 72 ריצות.
+הפלט המלא נשמר בתיקייה <code>outputs</code>: <code>experiment_results.csv</code> (שתי הטבלאות, נפתח באקסל)
+ו-<code>experiment_output.txt</code>. זמני הריצה תלויים במחשב שעליו מריצים; מספרי הפיתוחים אינם תלויים בו.</p>
+
+<h4>טבלה 1 - השוואת ביצועי השיטות</h4>
+<div class="table-wrap">
+<table>
+  <tr><th>מדד</th><th class="num">A* h0</th><th class="num">A* h1</th><th class="num">A* h2</th><th class="num">IDA* h0</th><th class="num">IDA* h1</th><th class="num">IDA* h2</th></tr>
+  <tr><td>זמן ממוצע (שניות)</td><td class="num">2.825</td><td class="num">0.0006</td><td class="num">0.0003</td><td class="num">11.051</td><td class="num">0.0026</td><td class="num">0.0003</td></tr>
+  <tr><td>סטיית תקן זמן</td><td class="num">7.649</td><td class="num">0.0007</td><td class="num">0.0004</td><td class="num">13.871</td><td class="num">0.0057</td><td class="num">0.0003</td></tr>
+  <tr><td>פיתוחים - ממוצע</td><td class="num">51,738.5</td><td class="num">14.8</td><td class="num">5.6</td><td class="num">194,413</td><td class="num">76.7</td><td class="num">6.3</td></tr>
+  <tr><td>פיתוחים - סטיית תקן</td><td class="num">142,036.4</td><td class="num">20.1</td><td class="num">3.1</td><td class="num">240,645.1</td><td class="num">170.0</td><td class="num">4.7</td></tr>
+  <tr><td>הצלחות (מתוך 12)</td><td class="num">11</td><td class="num">12</td><td class="num">12</td><td class="num">7</td><td class="num">12</td><td class="num">12</td></tr>
+  <tr><td>הגעה למגבלת ריצה</td><td class="num">1</td><td class="num">0</td><td class="num">0</td><td class="num">5</td><td class="num">0</td><td class="num">0</td></tr>
+</table>
+</div>
+<p>הממוצעים כוללים גם ריצות שנעצרו במגבלה, ולכן הערכים של <code>h0</code> הם הערכת חסר: בלי המגבלה הן היו ממשיכות לרוץ.</p>
+
+<h4>פיתוחים ועלות לכל זוג</h4>
+<p>תקציר של טבלה 2: מספר הפיתוחים בכל שיטה. "מגבלה" מציין ריצה שנעצרה במגבלת הפיתוחים, ו"זמן" - ריצה שנעצרה במגבלת הזמן.</p>
+<div class="table-wrap">
+<table>
+  <tr><th>זוג</th><th class="num">קוביות</th><th class="num">עלות</th><th class="num">A* h0</th><th class="num">A* h1</th><th class="num">A* h2</th><th class="num">IDA* h0</th><th class="num">IDA* h1</th><th class="num">IDA* h2</th></tr>
+  <tr><td>זוג 1</td><td class="num">3</td><td class="num">3</td><td class="num">10</td><td class="num">4</td><td class="num">3</td><td class="num">29</td><td class="num">4</td><td class="num">3</td></tr>
+  <tr><td>זוג 2</td><td class="num">3</td><td class="num">1</td><td class="num">2</td><td class="num">1</td><td class="num">1</td><td class="num">3</td><td class="num">1</td><td class="num">1</td></tr>
+  <tr><td>זוג 3</td><td class="num">3</td><td class="num">3</td><td class="num">6</td><td class="num">3</td><td class="num">3</td><td class="num">13</td><td class="num">3</td><td class="num">3</td></tr>
+  <tr><td>זוג 4</td><td class="num">5</td><td class="num">5</td><td class="num">282</td><td class="num">8</td><td class="num">5</td><td class="num">550</td><td class="num">6</td><td class="num">5</td></tr>
+  <tr><td>זוג 5</td><td class="num">5</td><td class="num">7</td><td class="num">397</td><td class="num">8</td><td class="num">7</td><td class="num">4,515</td><td class="num">24</td><td class="num">7</td></tr>
+  <tr><td>זוג 6</td><td class="num">5</td><td class="num">5</td><td class="num">185</td><td class="num">10</td><td class="num">5</td><td class="num">2,695</td><td class="num">39</td><td class="num">5</td></tr>
+  <tr><td>זוג 7</td><td class="num">7</td><td class="num">8</td><td class="num">24,186</td><td class="num">62</td><td class="num">11</td><td class="num">מגבלה</td><td class="num">230</td><td class="num">18</td></tr>
+  <tr><td>זוג 8</td><td class="num">7</td><td class="num">7</td><td class="num">15,618</td><td class="num">52</td><td class="num">7</td><td class="num">מגבלה</td><td class="num">577</td><td class="num">7</td></tr>
+  <tr><td>זוג 9</td><td class="num">7</td><td class="num">2</td><td class="num">50</td><td class="num">2</td><td class="num">2</td><td class="num">58</td><td class="num">2</td><td class="num">2</td></tr>
+  <tr><td>זוג 10</td><td class="num">9</td><td class="num">6</td><td class="num">39,404</td><td class="num">7</td><td class="num">6</td><td class="num">זמן</td><td class="num">6</td><td class="num">6</td></tr>
+  <tr><td>זוג 11</td><td class="num">9</td><td class="num">10</td><td class="num">מגבלה</td><td class="num">14</td><td class="num">10</td><td class="num">מגבלה</td><td class="num">20</td><td class="num">12</td></tr>
+  <tr><td>זוג 12</td><td class="num">9</td><td class="num">7</td><td class="num">40,722</td><td class="num">7</td><td class="num">7</td><td class="num">זמן</td><td class="num">8</td><td class="num">7</td></tr>
+</table>
+</div>
+
+<h4>מסקנות</h4>
+<ul>
+  <li><strong>אופטימליות:</strong> בכל 12 הזוגות, כל השיטות שמצאו פתרון הגיעו לאותה עלות. זה תואם את ההוכחה ש-<code>h1</code> ו-<code>h2</code> קבילות, ולכן A* ו-IDA* מחזירים פתרון אופטימלי.</li>
+  <li><strong>השפעת היוריסטיקה:</strong> ככל שהיוריסטיקה מדויקת יותר, יש פחות פיתוחים: בכל זוג ובשני האלגוריתמים, <code>h2</code> פיתחה לכל היותר כמו <code>h1</code>, ו-<code>h1</code> לכל היותר כמו <code>h0</code>. בזוגות קטנים הן לפעמים שוות. עם <code>h2</code> מספר הפיתוחים כמעט שווה לעלות הפתרון, כלומר החיפוש כמעט לא סוטה מהמסלול האופטימלי.</li>
+  <li><strong>בלי יוריסטיקה:</strong> עם <code>h0</code> מספר הפיתוחים גדל מהר עם מספר הקוביות. ב-9 קוביות A* נעצר פעם אחת במגבלה, ו-IDA* נעצר בכל הזוגות של 7 ו-9 קוביות חוץ מזוג 9, שהפתרון שלו קצר מאוד (2 הזזות).</li>
+  <li><strong>A* מול IDA*:</strong> בממוצע IDA* מפתח יותר מצבים מ-A*, כי הוא מפתח מחדש את אותם מצבים בכל איטרציה ואין לו Closed. ההבדל גדול עם <code>h0</code> וקטן עם <code>h1</code>, ועם <code>h2</code> שני האלגוריתמים כמעט זהים. בכמה זוגות (למשל זוגות 4 ו-10 עם <code>h1</code>) IDA* פיתח מעט פחות, כי באיטרציה האחרונה הוא עוצר ברגע שהוא מגיע ליעד הראשון בעומק. מצד שני, IDA* צורך זיכרון רק לפי עומק המסלול, בעוד A* שומר את כל המצבים שהתגלו.</li>
+</ul>
+
+<h2 id="tests">13. הבדיקות שבוצעו</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>מה נבדק</th><th>איך</th><th>תוצאה</th></tr>
+  <tr><td>אופטימליות</td><td>300 בעיות אקראיות של 3 עד 6 קוביות. העלות של <code>A*</code> ו-<code>IDA*</code> עם <code>h1</code> ו-<code>h2</code> הושוותה לעלות של <code>A*</code> עם <code>h0</code></td><td>זהה בכל המקרים</td></tr>
+  <tr><td>קבילות ועקביות</td><td>באותן בעיות: <code>h</code> של מצב ההתחלה אינה עולה על העלות האמיתית, ו-<code>h(s) ≤ 1 + h(s')</code> לכל יורש של מצב במסלול</td><td>לא נמצאה הפרה</td></tr>
+  <tr><td>חוקיות המסלול</td><td>200 בעיות אקראיות: המסלול מתחיל במצב ההתחלתי, מסתיים ביעד, וכל צעד בו הוא העברה חוקית</td><td>תקין בכל המקרים</td></tr>
+  <tr><td>עצירות</td><td>מגבלת זמן, מגבלת פיתוחים ועצירה יזומה, בשני האלגוריתמים</td><td>הסטטוס הנכון הוחזר</td></tr>
+  <tr><td>הממשק</td><td>הרצה אוטומטית של המסך: ריצה בודדת, כל השיטות, עצירה באמצע, קלט שגוי, וניסוי של 12 זוגות</td><td>עבד; טבלה 2 התמלאה ב-72 שורות</td></tr>
+</table>
+</div>
+
+<h2 id="limits">14. החלטות ומגבלות</h2>
+<ul>
+  <li><strong>מגבלת זמן אינה ניתנת לשחזור מדויק.</strong> היא תלויה במהירות המחשב באותו רגע, ולכן ריצה של <code>h0</code>
+      שהצליחה פעם אחת יכולה להגיע למגבלה בפעם אחרת. לתוצאות קבועות עדיף להגביל רק לפי מספר פיתוחים.</li>
+  <li><strong>הממוצעים בטבלה 1 מחושבים על כל הריצות</strong>, כולל אלה שנעצרו במגבלה. בריצות כאלה הזמן ומספר הפיתוחים
+      קטועים בגובה המגבלה, ולכן הממוצע של <code>h0</code> הוא חסם תחתון.</li>
+  <li><strong>סטיית התקן היא של מדגם</strong> (חלוקה ב-<code>n-1</code>).</li>
+  <li><strong>גודל התור המרבי כולל רשומות ישנות</strong> שעדיין נמצאות ב-Open, כי הן תופסות זיכרון בפועל.</li>
+  <li><strong>היומן המוצג מוגבל</strong> ל-5,000 שליפות, ואינו נשמר לקובץ.</li>
+  <li><strong>שמות הקוביות</strong> צריכים להיות מאותו סוג, כי המצבים מושווים זה לזה. הממשק קורא את כולם כטקסט, כך שזה מתקיים תמיד.</li>
+  <li><strong>עומק הרקורסיה של IDA*</strong> מוגבל על ידי פייתון. בגדלים של המטלה זה רחוק מהגבול.</li>
+</ul>
+
+</main>
+</body>
+</html>

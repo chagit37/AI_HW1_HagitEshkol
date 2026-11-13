@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>הוראות הפעלה - מטלה 1: בעיית הקוביות</title>
+<style>
+  :root {
+    --bg: #fbfbf9; --text: #1f2933; --muted: #5b6770; --line: #d9dee3;
+    --card: #ffffff; --accent: #1f5f8b; --code-bg: #eef2f5; --head: #f1f4f6;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #15191d; --text: #e4e8eb; --muted: #9aa5ae; --line: #343c43;
+      --card: #1c2227; --accent: #7cb7dd; --code-bg: #242c33; --head: #222a30;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: "Segoe UI", Arial, sans-serif; font-size: 16px; line-height: 1.7;
+  }
+  main { max-width: 760px; margin: 0 auto; padding: 24px 18px 60px; }
+  h1 { font-size: 1.6rem; margin: 0 0 4px; }
+  h2 { font-size: 1.2rem; margin: 34px 0 10px; padding-bottom: 6px;
+       border-bottom: 2px solid var(--line); color: var(--accent); }
+  p { margin: 8px 0; }
+  .lead { color: var(--muted); margin-bottom: 20px; }
+  code { background: var(--code-bg); padding: 1px 5px; border-radius: 4px;
+         font-family: Consolas, "Courier New", monospace; font-size: 0.92em;
+         direction: ltr; unicode-bidi: isolate; display: inline-block; }
+  pre { background: var(--code-bg); border: 1px solid var(--line); border-radius: 8px;
+        padding: 12px 14px; overflow-x: auto; text-align: left;
+        font-family: Consolas, "Courier New", monospace; font-size: 0.92em; }
+  .table-wrap { overflow-x: auto; margin: 10px 0; }
+  table { border-collapse: collapse; width: 100%; background: var(--card); }
+  th, td { border: 1px solid var(--line); padding: 7px 10px; text-align: right; vertical-align: top; }
+  th { background: var(--head); font-weight: 600; }
+  ul, ol { padding-inline-start: 24px; }
+  li { margin: 5px 0; }
+</style>
+</head>
+<body>
+<main>
+
+<h1>הוראות הפעלה</h1>
+<p class="lead">מטלה 1 - חיפוש <code>A*</code> ו-<code>IDA*</code> בבעיית הקוביות.</p>
+
+<h2>מה צריך</h2>
+<ul>
+  <li>פייתון 3 בגרסה 3.8 ומעלה (נבדק בגרסה 3.14 על Windows).</li>
+  <li>אין צורך להתקין ספריות. הממשק משתמש ב-<code>tkinter</code>, שמגיע עם פייתון.</li>
+  <li>כל 11 קובצי ה-<code>py</code> צריכים להיות באותה תיקייה.</li>
+</ul>
+
+<h2>הפעלה</h2>
+<p>פותחים טרמינל בתיקייה של הקבצים ומריצים:</p>
+<pre dir="ltr">python HW1_Hagit.py</pre>
+<p>נפתח חלון הממשק, ודוגמת המטלה כבר מוזנת בו.</p>
+<p>להרצה בלי ממשק, עם פלט לטרמינל של שש השיטות על דוגמת המטלה:</p>
+<pre dir="ltr">python HW1_Hagit.py --demo</pre>
+
+<h2>הזנת מצבים</h2>
+<ul>
+  <li>כל ערימה נכתבת מהקובייה התחתונה לעליונה.</li>
+  <li>קוביות באותה ערימה מופרדות בפסיק או ברווח.</li>
+  <li>ערימות מופרדות בקו אנכי.</li>
+  <li>המצב ההתחלתי ומצב היעד צריכים להכיל בדיוק אותן קוביות.</li>
+</ul>
+<p>דוגמה: <code dir="rtl">ד | א, ב, ג</code> פירושו שתי ערימות - הקובייה ד לבדה, וערימה שבה א למטה, מעליה ב, ומעליה ג.</p>
+
+<h2>הרצת חיפוש</h2>
+<ol>
+  <li>בוחרים אלגוריתם (<code>A*</code> או <code>IDA*</code>) ויוריסטיקה (<code>h0</code>, <code>h1</code> או <code>h2</code>).</li>
+  <li>קובעים מגבלת זמן בשניות ומגבלת פיתוחים. שדה ריק פירושו בלי מגבלה.</li>
+  <li>לוחצים על <strong>הרץ</strong>. הכפתור <strong>הרץ את כל השיטות</strong> מריץ את שש השיטות ברצף.</li>
+  <li>אפשר לעצור ריצה באמצע בכפתור <strong>עצור</strong>.</li>
+</ol>
+<p>מתחת לכפתורים מוצגות התוצאה והמדדים של הריצה. אם הריצה הגיעה למגבלה תופיע ההודעה "הריצה הופסקה במגבלה".</p>
+
+<h2>הלשוניות</h2>
+<div class="table-wrap">
+<table>
+  <tr><th>לשונית</th><th>מה רואים ומה עושים</th></tr>
+  <tr><td>מסלול הפתרון</td><td>עלות כוללת ורשימת הפעולות. הכפתורים "התחלה", "הקודם", "הבא" ו"סוף" צועדים בין המצבים, והקובייה שהוזזה מודגשת בציור. לחיצה על שורה בטבלה קופצת לאותו צעד</td></tr>
+  <tr><td>תהליך החיפוש</td><td>עבור <code>A*</code>: המצבים לפי סדר השליפה מהתור. בחירת שורה מציגה את היורשים ומה קרה לכל אחד. עבור <code>IDA*</code>: האיטרציות. בחירת שורה מציגה את המצבים שפותחו ודוגמאות לגיזום</td></tr>
+  <tr><td>השוואת ריצות</td><td>שורה לכל ריצה שבוצעה, עם כל המדדים</td></tr>
+  <tr><td>ניסוי השוואתי</td><td>ראו בסעיף הבא</td></tr>
+</table>
+</div>
+
+<h2>הניסוי ההשוואתי</h2>
+<ol>
+  <li>עוברים ללשונית <strong>ניסוי השוואתי</strong>.</li>
+  <li>בשדה "מספר הקוביות בכל זוג מצבים" כותבים את הגדלים, מופרדים בפסיקים. כל מספר יוצר זוג אחד. ברירת המחדל היא 12 זוגות.</li>
+  <li>בשדה "גרעין אקראי" כותבים מספר שלם. אותו מספר ייצור תמיד את אותם זוגות.</li>
+  <li>לוחצים על <strong>הרץ ניסוי</strong>. המגבלות נלקחות מהשדות שבראש המסך.</li>
+  <li>בסיום לוחצים על <strong>שמור את הטבלאות לקובץ CSV</strong>. הקובץ <code>experiment_results.csv</code> נשמר ליד קובצי התוכנה ונפתח באקסל.</li>
+</ol>
+<p>עם ברירות המחדל (30 שניות ו-500,000 פיתוחים) הניסוי נמשך כמה דקות, בגלל הריצות של <code>h0</code> שמגיעות למגבלה.
+כדי שהתוצאות יהיו זהות בכל הרצה, משאירים את שדה מגבלת הזמן ריק ומגבילים רק לפי מספר פיתוחים.</p>
+
+</main>
+</body>
+</html>
